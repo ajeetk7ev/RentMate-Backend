@@ -24,6 +24,7 @@ import roomRoutes from "./routes/room.routes.js";
 import searchRoutes from "./routes/search.routes.js";
 import bookmarkRoutes from "./routes/bookmark.routes.js";
 import matchRoutes from "./routes/match.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 
 const app = express();
 
@@ -82,7 +83,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/rooms", roomRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/matches", matchRoutes);
-// app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/chat", chatRoutes);
 // app.use("/api/v1/reviews", reviewRoutes);
 // app.use("/api/v1/notifications", notificationRoutes);
 // app.use("/api/v1/admin", adminRoutes);

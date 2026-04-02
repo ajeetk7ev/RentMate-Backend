@@ -1,21 +1,12 @@
 /**
- * Chat & Message Validation Schemas
+ * Chat Validation Schemas
  *
- * Joi schemas for sending messages in chat rooms.
+ * Joi schemas for chat operations.
  */
 import Joi from "joi";
 
+// Send message (REST endpoint)
 export const sendMessageSchema = Joi.object({
-  chatRoomId: Joi.string()
-    .trim()
-    .required()
-    .pattern(/^[0-9a-fA-F]{24}$/)
-    .messages({
-      "string.empty": "Chat room ID is required",
-      "string.pattern.base": "Invalid chat room ID format",
-      "any.required": "Chat room ID is required",
-    }),
-
   content: Joi.string()
     .trim()
     .min(1)
@@ -33,5 +24,51 @@ export const sendMessageSchema = Joi.object({
     .default("text")
     .messages({
       "any.only": "Message type must be text or image",
+    }),
+});
+
+// Chat rooms list query
+export const chatRoomsQuerySchema = Joi.object({
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(20)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
+    }),
+});
+
+// Message history query
+export const messagesQuerySchema = Joi.object({
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(30)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
     }),
 });
