@@ -33,6 +33,18 @@ const env = {
 
   // RabbitMQ
   RABBITMQ_URL: process.env.RABBITMQ_URL || "amqp://localhost:5672",
+
+  // SendGrid
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+  SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@rentmate.com",
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/v1/auth/google/callback",
+
+  // Frontend URL (for reset password links, redirects)
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
 };
 
 // Validate Critical Variables

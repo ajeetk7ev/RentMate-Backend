@@ -3,10 +3,12 @@
  *
  * Stores user credentials, profile details, lifestyle preferences,
  * and search preferences. Supports both room owners and seekers.
+ * Supports signup via email, phone, or Google OAuth.
  */
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import env from "../config/env.js";
 import {
   UserRoles,
@@ -30,24 +32,25 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: [true, "Email is required"],
       unique: true,
+      sparse: true, // allows multiple null values (for phone-only signups)
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
     },
 
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
-      select: false, // never return password by default
-    },
-
     phone: {
       type: String,
+      unique: true,
+      sparse: true, // allows multiple null values (for email-only signups)
       trim: true,
       match: [/^\d{10}$/, "Please provide a valid 10-digit phone number"],
+    },
+
+    password: {
+      type: String,
+      minlength: [6, "Password must be at least 6 characters"],
+      select: false, // never return password by default
     },
 
     avatar: {
@@ -182,7 +185,15 @@ const userSchema = new mongoose.Schema(
     // Google OAuth
     googleId: {
       type: String,
+      unique: true,
       sparse: true,
+    },
+
+    // Auth provider tracking
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
 
     // Password Reset
@@ -203,11 +214,10 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ city: 1, role: 1, isActive: 1 });
 userSchema.index({ budgetMin: 1, budgetMax: 1 });
 userSchema.index({ gender: 1, lookingFor: 1 });
-userSchema.index({ email: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -218,17 +228,36 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Generate JWT token
+// Generate JWT access token
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
       email: this.email,
+      phone: this.phone,
       role: this.role,
     },
     env.JWT_SECRET,
     { expiresIn: env.JWT_EXPIRE }
   );
+};
+
+// Generate password reset token (plain token for URL, hashed stored in DB)
+userSchema.methods.generateResetPasswordToken = function () {
+  // Generate random token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  // Hash and store in DB
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // Set expiry — 15 minutes
+  this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+  // Return plain token (sent via email)
+  return resetToken;
 };
 
 // Check if profile is complete

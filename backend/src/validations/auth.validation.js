@@ -2,6 +2,7 @@
  * Auth Validation Schemas
  *
  * Joi schemas for signup, login, and password-related operations.
+ * Supports both email and phone-based authentication.
  */
 import Joi from "joi";
 
@@ -22,11 +23,17 @@ export const signupSchema = Joi.object({
     .trim()
     .lowercase()
     .email()
-    .required()
     .messages({
-      "string.empty": "Email is required",
+      "string.empty": "Email cannot be empty",
       "string.email": "Please provide a valid email address",
-      "any.required": "Email is required",
+    }),
+
+  phone: Joi.string()
+    .trim()
+    .pattern(/^\d{10}$/)
+    .messages({
+      "string.empty": "Phone cannot be empty",
+      "string.pattern.base": "Please provide a valid 10-digit phone number",
     }),
 
   password: Joi.string()
@@ -55,18 +62,28 @@ export const signupSchema = Joi.object({
     .messages({
       "any.only": "Role must be owner, seeker, or both",
     }),
-});
+})
+  .or("email", "phone")
+  .messages({
+    "object.missing": "Either email or phone number is required",
+  });
 
 export const loginSchema = Joi.object({
   email: Joi.string()
     .trim()
     .lowercase()
     .email()
-    .required()
     .messages({
-      "string.empty": "Email is required",
+      "string.empty": "Email cannot be empty",
       "string.email": "Please provide a valid email address",
-      "any.required": "Email is required",
+    }),
+
+  phone: Joi.string()
+    .trim()
+    .pattern(/^\d{10}$/)
+    .messages({
+      "string.empty": "Phone cannot be empty",
+      "string.pattern.base": "Please provide a valid 10-digit phone number",
     }),
 
   password: Joi.string()
@@ -75,7 +92,11 @@ export const loginSchema = Joi.object({
       "string.empty": "Password is required",
       "any.required": "Password is required",
     }),
-});
+})
+  .or("email", "phone")
+  .messages({
+    "object.missing": "Either email or phone number is required",
+  });
 
 export const forgotPasswordSchema = Joi.object({
   email: Joi.string()
