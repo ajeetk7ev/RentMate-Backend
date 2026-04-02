@@ -1,63 +1,76 @@
 /**
- * Report Validation Schema
+ * Report Validation Schemas
  *
- * Joi schema for filing user/room reports.
+ * Handles reporting of users and room listings.
  */
 import Joi from "joi";
+import { ReportReason, ReportStatus } from "../utils/constants.js";
 
+const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+
+// Create Report Schema
 export const createReportSchema = Joi.object({
   reportedUserId: Joi.string()
     .trim()
-    .pattern(/^[0-9a-fA-F]{24}$/)
-    .messages({
-      "string.pattern.base": "Invalid user ID format",
-    }),
+    .pattern(objectIdPattern)
+    .allow(null),
 
   reportedRoomId: Joi.string()
     .trim()
-    .pattern(/^[0-9a-fA-F]{24}$/)
-    .messages({
-      "string.pattern.base": "Invalid room ID format",
-    }),
+    .pattern(objectIdPattern)
+    .allow(null),
 
   reason: Joi.string()
-    .valid("fake", "harassment", "spam", "other")
+    .valid(...Object.values(ReportReason))
     .required()
     .messages({
-      "any.only": "Reason must be fake, harassment, spam, or other",
-      "any.required": "Report reason is required",
+      "any.only": "Please provide a valid reason",
+      "any.required": "Reason is required",
     }),
 
   description: Joi.string()
     .trim()
-    .min(10)
-    .max(1000)
     .required()
+    .max(1000)
     .messages({
-      "string.empty": "Description is required",
-      "string.min": "Description must be at least 10 characters",
       "string.max": "Description cannot exceed 1000 characters",
       "any.required": "Description is required",
     }),
-})
-  .or("reportedUserId", "reportedRoomId")
+
+  evidence: Joi.array().items(
+    Joi.object({
+      url: Joi.string().uri().required(),
+      publicId: Joi.string().required(),
+    })
+  ).max(5),
+
+}).or("reportedUserId", "reportedRoomId") // At least one of these must be provided
   .messages({
-    "object.missing": "Either reported user ID or reported room ID is required",
+    "object.missing": "Please provide a user or a room listing to report",
   });
 
+// Admin Review Schema
 export const updateReportStatusSchema = Joi.object({
   status: Joi.string()
-    .valid("reviewed", "resolved")
+    .valid(ReportStatus.REVIEWED, ReportStatus.RESOLVED)
     .required()
     .messages({
-      "any.only": "Status must be reviewed or resolved",
-      "any.required": "Status is required",
+      "any.only": "Target status must be reviewed or resolved",
+      "any.required": "Status update is required",
     }),
 
   adminNotes: Joi.string()
     .trim()
     .max(500)
+    .allow("")
     .messages({
       "string.max": "Admin notes cannot exceed 500 characters",
     }),
+});
+
+// Listing Query Schema
+export const reportListQuerySchema = Joi.object({
+  status: Joi.string().valid(...Object.values(ReportStatus)),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(50).default(10),
 });

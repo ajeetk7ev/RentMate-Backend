@@ -15,8 +15,9 @@ import ChatRoom from "../models/chatRoom.model.js";
 import User from "../models/user.model.js";
 import RoomListing from "../models/roomListing.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { MatchRequestStatus, PAGINATION } from "../utils/constants.js";
+import { MatchRequestStatus, PAGINATION, NotificationType } from "../utils/constants.js";
 import logger from "../config/logger.js";
+import NotificationProducer from "../queues/notification.producer.js";
 
 class MatchService {
   // ─────────────────────────────────────────────
@@ -224,6 +225,17 @@ class MatchService {
 
     logger.info(`Match request sent: ${senderId} -> ${receiverId} (score: ${score})`);
 
+    // Trigger Notification
+    NotificationProducer.publishNotification({
+      recipient: receiverId,
+      sender: senderId,
+      type: NotificationType.MATCH,
+      title: "New Match Request",
+      message: `${sender.name} sent you a roommate match request with ${score}% compatibility!`,
+      refModel: "MatchRequest",
+      refId: matchRequest._id,
+    });
+
     return matchRequest;
   }
 
@@ -281,6 +293,18 @@ class MatchService {
     await matchRequest.populate("receiver", "name avatar age gender occupation city isVerified");
 
     logger.info(`Match request ${requestId} ${newStatus} by ${userId}`);
+
+    // Trigger Notification to sender
+    const statusText = newStatus === MatchRequestStatus.ACCEPTED ? "accepted" : "rejected";
+    NotificationProducer.publishNotification({
+      recipient: matchRequest.sender,
+      sender: userId,
+      type: NotificationType.MATCH,
+      title: `Match Request ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
+      message: `${matchRequest.receiver.name} has ${statusText} your match request.`,
+      refModel: "MatchRequest",
+      refId: matchRequest._id,
+    });
 
     return matchRequest;
   }

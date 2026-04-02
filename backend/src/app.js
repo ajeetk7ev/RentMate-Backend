@@ -25,6 +25,9 @@ import searchRoutes from "./routes/search.routes.js";
 import bookmarkRoutes from "./routes/bookmark.routes.js";
 import matchRoutes from "./routes/match.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
+import reportRoutes from "./routes/report.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
 
@@ -84,10 +87,10 @@ app.use("/api/v1/rooms", roomRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/matches", matchRoutes);
 app.use("/api/v1/chat", chatRoutes);
-// app.use("/api/v1/reviews", reviewRoutes);
-// app.use("/api/v1/notifications", notificationRoutes);
-// app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/bookmarks", bookmarkRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // 404 Handler (must be after all routes)
 app.use(notFoundMiddleware);

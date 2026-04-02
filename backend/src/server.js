@@ -12,6 +12,8 @@ import http from "http";
 import mongoose from "mongoose";
 import { app } from "./app.js";
 import env from "./config/env.js";
+import { rabbitMQ } from "./config/rabbitmq.js";
+import { startNotificationConsumer } from "./queues/notification.consumer.js";
 import logger from "./config/logger.js";
 import { connectDB } from "./config/db.js";
 import { connectCloudinary } from "./config/cloudinary.js";
@@ -29,16 +31,20 @@ const startServer = async () => {
     connectCloudinary();
 
     // 3. Create HTTP server from Express app
-    const server = http.createServer(app);
+    const httpServer = http.createServer(app);
 
     // 4. Initialize Socket.IO with Redis Pub/Sub adapter
-    const io = initializeSocket(server);
+    const io = initializeSocket(httpServer);
 
     // Make io accessible to Express routes if needed
     app.set("io", io);
 
-    // 5. Start HTTP + WebSocket server
-    server.listen(PORT, () => {
+    // 5. RabbitMQ Connection & Consumer
+    await rabbitMQ.connect();
+    await startNotificationConsumer();
+
+    // 6. Start HTTPServer
+    const server = httpServer.listen(PORT, () => {
       logger.info("RentMate API Server started");
       logger.info(`Environment : ${env.NODE_ENV}`);
       logger.info(`Port        : ${PORT}`);
@@ -56,8 +62,9 @@ const startServer = async () => {
         logger.info("Socket.IO connections closed.");
       });
 
-      server.close(() => {
-        logger.info("HTTP server closed.");
+      server.close(async () => {
+        if (rabbitMQ) await rabbitMQ.close();
+        logger.info("Server closed");
         mongoose.connection.close(false).then(() => {
           logger.info("MongoDB connection closed.");
           process.exit(0);

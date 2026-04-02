@@ -12,8 +12,9 @@
 import ChatRoom from "../models/chatRoom.model.js";
 import Message from "../models/message.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { PAGINATION } from "../utils/constants.js";
+import { PAGINATION, NotificationType } from "../utils/constants.js";
 import logger from "../config/logger.js";
+import NotificationProducer from "../queues/notification.producer.js";
 
 class ChatService {
   /**
@@ -80,6 +81,23 @@ class ChatService {
     await message.populate("sender", "name avatar");
 
     logger.info(`Message sent in room ${chatRoomId} by user ${senderId}`);
+
+    // Trigger Notification for each participant other than sender
+    const sender = await User.findById(senderId).select("name");
+    chatRoom.participants.forEach((participantId) => {
+      const pid = participantId.toString();
+      if (pid !== senderId.toString()) {
+        NotificationProducer.publishNotification({
+          recipient: pid,
+          sender: senderId,
+          type: NotificationType.CHAT,
+          title: `New message from ${sender.name}`,
+          message: content.length > 50 ? `${content.substring(0, 50)}...` : content,
+          refModel: "ChatRoom",
+          refId: chatRoomId,
+        });
+      }
+    });
 
     return message;
   }
