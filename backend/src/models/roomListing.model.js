@@ -176,12 +176,19 @@ const roomListingSchema = new mongoose.Schema(
 // Geospatial index for location-based queries
 roomListingSchema.index({ coordinates: "2dsphere" });
 
+// Text index for full-text search (weighted by field relevance)
+roomListingSchema.index(
+  { title: "text", description: "text", address: "text", city: "text" },
+  { weights: { title: 10, city: 5, address: 3, description: 1 } }
+);
+
 // Compound indexes for search and filtering
 roomListingSchema.index({ city: 1, status: 1, rent: 1 });
 roomListingSchema.index({ status: 1, roomType: 1, genderPreference: 1 });
 roomListingSchema.index({ owner: 1, status: 1 });
 roomListingSchema.index({ createdAt: -1 });
 roomListingSchema.index({ rent: 1 });
+roomListingSchema.index({ viewCount: -1, interestCount: -1 });
 
 const RoomListing = mongoose.model("RoomListing", roomListingSchema);
 
