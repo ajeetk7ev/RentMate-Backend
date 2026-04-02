@@ -1,7 +1,7 @@
 /**
  * User Profile Validation Schemas
  *
- * Joi schemas for profile update and lifestyle preferences.
+ * Joi schemas for profile update, browse filters, and lifestyle preferences.
  */
 import Joi from "joi";
 
@@ -49,6 +49,7 @@ export const updateProfileSchema = Joi.object({
   bio: Joi.string()
     .trim()
     .max(500)
+    .allow("")
     .messages({
       "string.max": "Bio cannot exceed 500 characters",
     }),
@@ -81,7 +82,10 @@ export const updateProfileSchema = Joi.object({
 
   budgetMax: Joi.number()
     .min(0)
-    .greater(Joi.ref("budgetMin"))
+    .when("budgetMin", {
+      is: Joi.exist(),
+      then: Joi.number().greater(Joi.ref("budgetMin")),
+    })
     .messages({
       "number.base": "Maximum budget must be a number",
       "number.min": "Maximum budget cannot be negative",
@@ -105,6 +109,12 @@ export const updateProfileSchema = Joi.object({
     .max(10)
     .messages({
       "array.max": "Cannot add more than 10 languages",
+    }),
+
+  role: Joi.string()
+    .valid("owner", "seeker", "both")
+    .messages({
+      "any.only": "Role must be owner, seeker, or both",
     }),
 
   lifestyleHabits: Joi.object({
@@ -134,4 +144,93 @@ export const updateProfileSchema = Joi.object({
   }).messages({
     "object.base": "Lifestyle habits must be an object",
   }),
+});
+
+// Query validation for browsing roommate profiles
+export const browseProfilesSchema = Joi.object({
+  city: Joi.string()
+    .trim()
+    .lowercase()
+    .messages({
+      "string.empty": "City cannot be empty",
+    }),
+
+  gender: Joi.string()
+    .valid("male", "female", "other")
+    .messages({
+      "any.only": "Gender must be male, female, or other",
+    }),
+
+  lookingFor: Joi.string()
+    .valid("room", "roommate", "both")
+    .messages({
+      "any.only": "Looking for must be room, roommate, or both",
+    }),
+
+  budgetMin: Joi.number()
+    .min(0)
+    .messages({
+      "number.base": "Minimum budget must be a number",
+      "number.min": "Minimum budget cannot be negative",
+    }),
+
+  budgetMax: Joi.number()
+    .min(0)
+    .messages({
+      "number.base": "Maximum budget must be a number",
+      "number.min": "Maximum budget cannot be negative",
+    }),
+
+  moveInTimeline: Joi.string()
+    .valid("immediate", "within-1-month", "within-3-months", "flexible")
+    .messages({
+      "any.only": "Invalid move-in timeline option",
+    }),
+
+  smokingPreference: Joi.string()
+    .valid("yes", "no", "occasionally")
+    .messages({
+      "any.only": "Smoking preference must be yes, no, or occasionally",
+    }),
+
+  drinkingPreference: Joi.string()
+    .valid("yes", "no", "occasionally")
+    .messages({
+      "any.only": "Drinking preference must be yes, no, or occasionally",
+    }),
+
+  foodPreference: Joi.string()
+    .valid("veg", "non-veg", "vegan", "no-preference")
+    .messages({
+      "any.only": "Food preference must be veg, non-veg, vegan, or no-preference",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.integer": "Page must be a whole number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.integer": "Limit must be a whole number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
+    }),
+
+  sort: Joi.string()
+    .valid("latest", "oldest")
+    .default("latest")
+    .messages({
+      "any.only": "Sort must be latest or oldest",
+    }),
 });

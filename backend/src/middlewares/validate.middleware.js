@@ -1,37 +1,45 @@
 /**
- * validate - Joi validation middleware factory.
+ * Validation Middleware Factory
  *
- * Takes a Joi schema and returns an Express middleware that validates
- * the request body against it. On failure, returns a 400 response
- * with per-field error messages.
+ * Provides middleware for validating different parts of the request:
+ * - validate(schema)       → validates req.body
+ * - validateQuery(schema)  → validates req.query
+ * - validateParams(schema) → validates req.params
  *
  * Usage:
- *   import { validate } from "../middlewares/validate.middleware.js";
- *   import { signupSchema } from "../validations/auth.validation.js";
- *
- *   router.post("/signup", validate(signupSchema), authController.signup);
+ *   router.post("/signup", validate(signupSchema), controller.signup);
+ *   router.get("/profiles", validateQuery(browseSchema), controller.browse);
+ *   router.get("/:id", validateParams(paramSchema), controller.getById);
  */
 import { formattedJoiErrors } from "../utils/formattedJoiErrors.js";
 
-export const validate = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.body, {
-      abortEarly: false,       // collect all errors, not just the first
-      stripUnknown: true,      // remove unknown fields from req.body
-      allowUnknown: false,     // reject unknown fields
-    });
-
-    if (error) {
-      const errors = formattedJoiErrors(error);
-
-      return res.status(400).json({
-        success: false,
-        statusCode: 400,
-        message: "Validation Error",
-        errors,
+const createValidator = (source) => {
+  return (schema) => {
+    return (req, res, next) => {
+      const { error, value } = schema.validate(req[source], {
+        abortEarly: false,
+        stripUnknown: true,
+        allowUnknown: false,
       });
-    }
 
-    next();
+      if (error) {
+        const errors = formattedJoiErrors(error);
+
+        return res.status(400).json({
+          success: false,
+          statusCode: 400,
+          message: "Validation Error",
+          errors,
+        });
+      }
+
+      // Replace with validated + sanitized values
+      req[source] = value;
+      next();
+    };
   };
 };
+
+export const validate = createValidator("body");
+export const validateQuery = createValidator("query");
+export const validateParams = createValidator("params");
