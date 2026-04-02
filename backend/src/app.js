@@ -20,6 +20,7 @@ import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middlew
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import roomRoutes from "./routes/room.routes.js";
 
 const app = express();
 
@@ -75,7 +76,7 @@ app.get("/api/v1/health", (req, res) => {
 // API Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
-// app.use("/api/v1/rooms", roomRoutes);
+app.use("/api/v1/rooms", roomRoutes);
 // app.use("/api/v1/matches", matchRoutes);
 // app.use("/api/v1/chat", chatRoutes);
 // app.use("/api/v1/reviews", reviewRoutes);

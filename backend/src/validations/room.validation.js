@@ -1,7 +1,8 @@
 /**
  * Room Listing Validation Schemas
  *
- * Joi schemas for creating and updating room listings.
+ * Joi schemas for creating, updating, searching room listings,
+ * and query parameter validation.
  */
 import Joi from "joi";
 
@@ -282,10 +283,182 @@ export const updateRoomSchema = Joi.object({
       "date.base": "Available from must be a valid date",
       "date.format": "Available from must be in ISO date format",
     }),
+});
 
+// Query validation for searching rooms
+export const searchRoomsQuerySchema = Joi.object({
+  city: Joi.string()
+    .trim()
+    .messages({
+      "string.empty": "City cannot be empty",
+    }),
+
+  budgetMin: Joi.number()
+    .min(0)
+    .messages({
+      "number.base": "Minimum budget must be a number",
+      "number.min": "Minimum budget cannot be negative",
+    }),
+
+  budgetMax: Joi.number()
+    .min(0)
+    .messages({
+      "number.base": "Maximum budget must be a number",
+      "number.min": "Maximum budget cannot be negative",
+    }),
+
+  roomType: Joi.string()
+    .valid("private", "shared", "entire")
+    .messages({
+      "any.only": "Room type must be private, shared, or entire",
+    }),
+
+  genderPreference: Joi.string()
+    .valid("male", "female", "any")
+    .messages({
+      "any.only": "Gender preference must be male, female, or any",
+    }),
+
+  furnishing: Joi.string()
+    .valid("furnished", "semi-furnished", "unfurnished")
+    .messages({
+      "any.only": "Furnishing must be furnished, semi-furnished, or unfurnished",
+    }),
+
+  amenities: Joi.alternatives()
+    .try(
+      Joi.array().items(Joi.string().trim()),
+      Joi.string().trim()
+    )
+    .messages({
+      "alternatives.types": "Amenities must be a string or array of strings",
+    }),
+
+  availableFrom: Joi.date()
+    .iso()
+    .messages({
+      "date.base": "Available from must be a valid date",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
+    }),
+
+  sort: Joi.string()
+    .valid("latest", "oldest", "price_low", "price_high")
+    .default("latest")
+    .messages({
+      "any.only": "Sort must be latest, oldest, price_low, or price_high",
+    }),
+});
+
+// Query validation for my listings
+export const myListingsQuerySchema = Joi.object({
   status: Joi.string()
     .valid("active", "inactive", "rented")
     .messages({
       "any.only": "Status must be active, inactive, or rented",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
+    }),
+});
+
+// Body validation for status update
+export const updateStatusSchema = Joi.object({
+  status: Joi.string()
+    .valid("active", "inactive", "rented")
+    .required()
+    .messages({
+      "any.only": "Status must be active, inactive, or rented",
+      "any.required": "Status is required",
+    }),
+});
+
+// Query validation for nearby rooms
+export const nearbyRoomsQuerySchema = Joi.object({
+  lng: Joi.number()
+    .min(-180)
+    .max(180)
+    .required()
+    .messages({
+      "number.base": "Longitude must be a number",
+      "number.min": "Longitude must be between -180 and 180",
+      "number.max": "Longitude must be between -180 and 180",
+      "any.required": "Longitude is required",
+    }),
+
+  lat: Joi.number()
+    .min(-90)
+    .max(90)
+    .required()
+    .messages({
+      "number.base": "Latitude must be a number",
+      "number.min": "Latitude must be between -90 and 90",
+      "number.max": "Latitude must be between -90 and 90",
+      "any.required": "Latitude is required",
+    }),
+
+  radius: Joi.number()
+    .min(1)
+    .max(50)
+    .default(5)
+    .messages({
+      "number.base": "Radius must be a number",
+      "number.min": "Radius must be at least 1 km",
+      "number.max": "Radius cannot exceed 50 km",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "Page must be a number",
+      "number.min": "Page must be at least 1",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10)
+    .messages({
+      "number.base": "Limit must be a number",
+      "number.min": "Limit must be at least 1",
+      "number.max": "Limit cannot exceed 50",
     }),
 });
