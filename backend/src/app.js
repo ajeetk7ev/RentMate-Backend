@@ -28,6 +28,7 @@ import chatRoutes from "./routes/chat.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -91,6 +92,7 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/bookmarks", bookmarkRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // 404 Handler (must be after all routes)
 app.use(notFoundMiddleware);

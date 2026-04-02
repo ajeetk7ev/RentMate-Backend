@@ -167,6 +167,13 @@ const roomListingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    
+    // Administrative flag
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -189,6 +196,7 @@ roomListingSchema.index({ owner: 1, status: 1 });
 roomListingSchema.index({ createdAt: -1 });
 roomListingSchema.index({ rent: 1 });
 roomListingSchema.index({ viewCount: -1, interestCount: -1 });
+roomListingSchema.index({ isFeatured: -1, createdAt: -1 });
 
 const RoomListing = mongoose.model("RoomListing", roomListingSchema);
 
