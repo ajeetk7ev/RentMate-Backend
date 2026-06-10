@@ -14,7 +14,6 @@ class AdminController {
    */
   static getDashboardStats = asyncHandler(async (req, res) => {
     const stats = await AdminService.getDashboardStats();
-
     res
       .status(200)
       .json(new ApiResponse(200, { stats }, "Dashboard stats fetched successfully"));
