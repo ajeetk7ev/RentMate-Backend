@@ -15,7 +15,7 @@ import env from "../config/env.js";
  * Attaches full user object (without password) to req.user.
  */
 export const isAuthenticated = asyncHandler(async (req, res, next) => {
-  const token = req.cookies?.accessToken;
+  const token = req.cookies?.accessToken
 
   if (!token) {
     throw new ApiError(401, "Please login to access this resource");
