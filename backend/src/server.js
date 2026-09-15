@@ -1,13 +1,4 @@
-/**
- * Server Entry Point
- *
- * - Loads environment variables (via env.js)
- * - Connects to MongoDB
- * - Configures Cloudinary
- * - Initializes Socket.IO with Redis Pub/Sub
- * - Starts the HTTP server
- * - Handles graceful shutdown
- */
+
 import http from "http";
 import mongoose from "mongoose";
 import { app } from "./app.js";
